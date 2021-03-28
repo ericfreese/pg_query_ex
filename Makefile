@@ -9,7 +9,20 @@ else
 	LIBPG_QUERY_PATH = deps/libpg_query
 endif
 
+CFLAGS += -I$(LIBPG_QUERY_PATH)
+
+ifneq ($(OS),Windows_NT)
+	CFLAGS += -fPIC
+
+	ifeq ($(shell uname),Darwin)
+		LDFLAGS += -dynamiclib -undefined dynamic_lookup
+	endif
+endif
+
 all: priv/query.so
 
 priv/query.so: src/query.c
-	cc -fPIC $(CFLAGS) -I$(LIBPG_QUERY_PATH) $(LIBPG_QUERY_PATH)/libpg_query.a -dynamiclib -undefined dynamic_lookup -o priv/query.so src/query.c
+	cc $(CFLAGS) -shared $(LDFLAGS) -o $@ src/query.c $(LIBPG_QUERY_PATH)/libpg_query.a
+
+clean:
+	$(RM) priv/query.so
