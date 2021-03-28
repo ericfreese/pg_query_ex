@@ -5,13 +5,16 @@ defmodule PgQuery do
     The original library can be found at https://github.com/lfittl/libpg_query/tree/10-latest
   """
 
-  @on_load :load_nifs 
+  @on_load :load_nifs
+
+  app = Mix.Project.config[:app]
 
   @doc false
   def load_nifs() do
-    :erlang.load_nif('./priv/query', 0) 
+    path = :filename.join(:code.priv_dir(unquote(app)), 'query')
+    :erlang.load_nif(path, 0) 
   end
-  
+
   @doc """
   Parses one or more sql queries (delimited by `;`), returns a map describing the query.
 
@@ -74,9 +77,9 @@ defmodule PgQuery do
 
   @doc """
   Returns a fingerprint for a given query, ignoring formatting, values in where clauses etc.
-  
+
   Precise rules can be found at https://github.com/lfittl/libpg_query/wiki/Fingerprinting
-  
+
   ## Examples
 
       iex> PgQuery.fingerprint_query("SELECT name from users where id = 1")
@@ -84,10 +87,10 @@ defmodule PgQuery do
 
       iex> PgQuery.fingerprint_query("SELECT name from users where id = 2")
       {:ok, "021ecc4fb237583f0d5612ffc00eadc799741785c0"}
-      
+
       iex> PgQuery.fingerprint_query("SELECT age from users where id = 2")
       {:ok, "02c60fb7b029a0d057ad1ef510ddd66356e4425336"}
-    
+
   """
   @spec fingerprint_query(sql :: String.t()) :: {:error, String.t()} | {:ok, String.t()}
   def fingerprint_query(_sql) do
